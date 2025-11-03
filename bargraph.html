@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Growth of Industrial & Technological Sectors in India (1950–2025)</title>
+  <style>
+    :root{
+      --bg:#e8f2ff;
+      --card:#ffffff;
+      --accent1:#2b6ef6; /* blue */
+      --accent2:#6b46ff; /* purple */
+      --muted:#6b7280;
+      --glass: rgba(255,255,255,0.6);
+      --shadow: 0 8px 30px rgba(43,110,246,0.12);
+      --radius:14px;
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#d9ecff);color:#10304a;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+    .wrap{width:100%;max-width:1100px}
+
+    header{display:flex;gap:16px;align-items:center;margin-bottom:18px}
+    .title{flex:1}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:6px 0 0;color:var(--muted);font-size:13px}
+
+    .controls{display:flex;gap:8px;align-items:center}
+    button.btn{background:linear-gradient(90deg,var(--accent1),var(--accent2));border:0;color:white;padding:8px 12px;border-radius:10px;cursor:pointer;box-shadow:var(--shadow);font-weight:600}
+    button.ghost{background:transparent;border:1px solid rgba(16,48,74,0.08);padding:8px 10px;border-radius:10px;cursor:pointer}
+
+    .card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+
+    /* Chart area */
+    .chart-grid{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start}
+    .chart-wrap{padding:18px;border-radius:12px;background:linear-gradient(180deg,rgba(43,110,246,0.04),rgba(107,70,255,0.02));}
+
+    .svg-wrap{width:100%;height:420px;display:flex;align-items:flex-end;padding:14px}
+    .y-axis{display:flex;flex-direction:column;justify-content:space-between;padding-right:8px;color:var(--muted);font-size:12px}
+
+    .bars{flex:1;position:relative;height:320px;display:flex;align-items:end;gap:18px;padding-left:6px}
+    .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;}
+    .bar .icon{font-size:22px;margin-bottom:6px}
+    .bar .bar-inner{width:68%;background:linear-gradient(180deg,#dfefff,rgba(43,110,246,0.08));border-radius:10px 10px 6px 6px;display:flex;align-items:flex-end;justify-content:center;overflow:visible;position:relative}
+    .bar .bar-fill{width:100%;height:0;border-radius:8px;display:block;transition:height 1200ms cubic-bezier(.2,.9,.2,1);box-shadow:0 8px 20px rgba(43,110,246,0.12);}
+
+    /* gradient for each bar */
+    .g1{background:linear-gradient(180deg,#9aa7ff,var(--accent1));}
+    .g2{background:linear-gradient(180deg,#9fb8ff,#60a5fa);}
+    .g3{background:linear-gradient(180deg,#c2a1ff,#6b46ff);}
+    .g4{background:linear-gradient(180deg,#8ed1ff,#2b6ef6);}
+    .g5{background:linear-gradient(180deg,#b1ffd6,#9effd4,#72f0ff);}
+
+    .value{position:absolute;top:-28px;background:linear-gradient(90deg,rgba(255,255,255,0.85),rgba(255,255,255,0.9));padding:6px 8px;border-radius:10px;font-weight:700;box-shadow:0 6px 16px rgba(0,0,0,0.06);transform:translateY(-6px);opacity:0;transition:opacity .18s,transform .25s}
+    .bar:hover .value{opacity:1;transform:translateY(-12px)}
+
+    .x-label{font-size:13px;color:var(--muted);margin-top:8px}
+
+    .info{font-size:13px;color:var(--muted);padding-top:12px}
+
+    /* legend + extras */
+    .side{display:flex;flex-direction:column;gap:14px}
+    .legend{display:flex;flex-direction:column;gap:10px}
+    .legend-item{display:flex;gap:10px;align-items:center}
+    .swatch{width:34px;height:18px;border-radius:6px}
+
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:none;align-items:center;justify-content:center}
+    .modal{background:var(--card);padding:18px;border-radius:12px;max-width:680px;width:92%;box-shadow:0 24px 50px rgba(16,48,74,0.24)}
+    .modal h3{margin-top:0}
+
+    /* small screens */
+    @media (max-width:880px){
+      .chart-grid{grid-template-columns:1fr;}
+      .svg-wrap{height:360px}
+      .bars{gap:10px}
+    }
+
+    /* fancy floating actions */
+    .fab{position:fixed;right:20px;bottom:20px;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:white;padding:12px;border-radius:999px;box-shadow:var(--shadow);border:0;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>Growth of Industrial & Technological Sectors in India (1950–2025)</h1>
+        <p class="lead">Decades vs Industrial & Technological Growth Index (out of 100). Hover/Click bars for details — use controls to animate, export or read the story.</p>
+      </div>
+      <div class="controls">
+        <button class="btn" id="playBtn">▶ Play Story</button>
+        <button class="ghost" id="resetBtn">Reset</button>
+        <button class="ghost" id="infoBtn">ℹ️ Graph Description</button>
+      </div>
+    </header>
+
+    <section class="card chart-grid">
+      <div class="chart-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <strong>Industrial & Technological Growth Index</strong>
+          <div style="font-size:13px;color:var(--muted)">Y-axis: 0 — 100</div>
+        </div>
+
+        <div style="display:flex;gap:12px">
+          <div class="y-axis" aria-hidden>
+            <div>100</div>
+            <div>80</div>
+            <div>60</div>
+            <div>40</div>
+            <div>20</div>
+            <div>0</div>
+          </div>
+
+          <div class="svg-wrap">
+            <div class="bars" id="bars">
+              <!-- Bar template -->
+              <!-- Each .bar contains: .icon, .bar-inner -> .bar-fill, value tooltip, label -->
+
+              <div class="bar" data-value="20" data-title="1950s" data-desc="Beginning of industrialization — focus on heavy industries, steel, and machinery after independence.">
+                <div class="icon">⚙️</div>
+                <div class="bar-inner">
+                  <div class="bar-fill g1"></div>
+                  <div class="value">20</div>
+                </div>
+                <div class="x-label">1950s</div>
+              </div>
+
+              <div class="bar" data-value="35" data-title="1970s" data-desc="Expansion of manufacturing, rise of public sector industries, and early computer use.">
+                <div class="icon">🏭</div>
+                <div class="bar-inner">
+                  <div class="bar-fill g2"></div>
+                  <div class="value">35</div>
+                </div>
+                <div class="x-label">1970s</div>
+              </div>
+
+              <div class="bar" data-value="60" data-title="1990s" data-desc="Liberalization era — entry of private industries, foreign technology, and IT sector boom.">
+                <div class="icon">💻</div>
+                <div class="bar-inner">
+                  <div class="bar-fill g3"></div>
+                  <div class="value">60</div>
+                </div>
+                <div class="x-label">1990s</div>
+              </div>
+
+              <div class="bar" data-value="80" data-title="2010s" data-desc="Rapid digital transformation — smartphones, automation, and 'Make in India' initiatives.">
+                <div class="icon">🌐</div>
+                <div class="bar-inner">
+                  <div class="bar-fill g4"></div>
+                  <div class="value">80</div>
+                </div>
+                <div class="x-label">2010s</div>
+              </div>
+
+              <div class="bar" data-value="95" data-title="2020s" data-desc="Era of intelligent machines — AI, robotics, IoT, and green tech revolution.">
+                <div class="icon">🤖</div>
+                <div class="bar-inner">
+                  <div class="bar-fill g5"></div>
+                  <div class="value">95</div>
+                </div>
+                <div class="x-label">2020s</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="info">
+          <strong>Caption:</strong> <span id="caption">This bar graph shows how India’s industrial and technological growth steadily rose from the 1950s’ mechanical beginnings to the 2020s’ intelligent and digital era.</span>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="card" style="padding:12px">
+          <strong>Design Tips</strong>
+          <ul style="margin:8px 0 0 16px;color:var(--muted);font-size:13px">
+            <li>Bright gradient bars to show modernization.</li>
+            <li>Icons above each bar to represent eras.</li>
+            <li>Animate bars rising decade by decade for storytelling.</li>
+          </ul>
+        </div>
+
+        <div class="legend card" style="padding:12px">
+          <strong>Legend & Actions</strong>
+          <div class="legend-item"><div class="swatch" style="background:linear-gradient(90deg,#9aa7ff,var(--accent1))"></div><div style="font-size:13px;color:var(--muted)">Mechanical → Modernization</div></div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="ghost" id="downloadBtn">⬇️ Export PNG</button>
+            <button class="ghost" id="downloadSVG">⬇️ Export SVG</button>
+            <button class="ghost" id="toggleValues">Toggle Values</button>
+          </div>
+        </div>
+
+        <div class="card" style="padding:12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+          <strong>Quick Story</strong>
+          <div style="font-size:13px;color:var(--muted)">Each bar represents a decade’s progress in innovation, automation, and industrial expansion.</div>
+          <div style="display:flex;gap:8px;margin-top:6px;width:100%">
+            <button class="btn" id="moreBtn" style="flex:1">Read More</button>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">Graph Description</h3>
+      <p>This bar graph shows how India’s industrial and technological growth steadily rose from the 1950s’ mechanical beginnings to the 2020s’ intelligent and digital era.</p>
+      <ul>
+        <li>1950s — Beginning of industrialization. Growth Index: 20</li>
+        <li>1970s — Expansion of manufacturing. Growth Index: 35</li>
+        <li>1990s — Liberalization & IT boom. Growth Index: 60</li>
+        <li>2010s — Rapid digital transformation. Growth Index: 80</li>
+        <li>2020s — AI, IoT, robotics. Growth Index: 95</li>
+      </ul>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px">
+        <button class="btn" id="closeModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="fab" id="fabInfo">?</button>
+
+  <script>
+    // Data & elements
+    const bars = Array.from(document.querySelectorAll('.bar'));
+    const playBtn = document.getElementById('playBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const infoBtn = document.getElementById('infoBtn');
+    const modal = document.getElementById('modal');
+    const closeModal = document.getElementById('closeModal');
+    const moreBtn = document.getElementById('moreBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const downloadSVG = document.getElementById('downloadSVG');
+    const toggleValues = document.getElementById('toggleValues');
+    const caption = document.getElementById('caption');
+    const fabInfo = document.getElementById('fabInfo');
+
+    // Utility: map value (0-100) to px height (max 280 px)
+    function valueToHeight(v){
+      const max = 280; // px
+      return (v/100) * max;
+    }
+
+    // Initialize bars with zero height
+    function initBars(){
+      bars.forEach(b=>{
+        const fill = b.querySelector('.bar-fill');
+        fill.style.height = '0px';
+        b.querySelector('.value').style.opacity = 0;
+      });
+    }
+    initBars();
+
+    // Animate bars sequentially
+    function playStory(){
+      playBtn.disabled = true;
+      playBtn.textContent = 'Playing...';
+      let delay = 120;
+      bars.forEach((b,i)=>{
+        const v = +b.dataset.value;
+        const fill = b.querySelector('.bar-fill');
+        const valueTag = b.querySelector('.value');
+        setTimeout(()=>{
+          fill.style.height = valueToHeight(v) + 'px';
+          valueTag.style.opacity = 1;
+        }, delay * (i+1));
+      });
+      // re-enable when done
+      setTimeout(()=>{playBtn.disabled=false; playBtn.textContent='▶ Play Story'}, delay*(bars.length+1)+400);
+    }
+
+    // Reset
+    resetBtn.addEventListener('click',()=>{
+      initBars();
+    });
+
+    playBtn.addEventListener('click',()=>{playStory();});
+
+    // Hover / click details
+    bars.forEach(b=>{
+      b.addEventListener('click',()=>{
+        const title = b.dataset.title;
+        const desc = b.dataset.desc;
+        const val = b.dataset.value;
+        // small pop-up using modal
+        document.getElementById('modalTitle').textContent = `${title} — ${val}`;
+        modal.querySelector('p')?.remove();
+        const p = document.createElement('p'); p.textContent = desc;
+        modal.querySelector('.modal').insertBefore(p, modal.querySelector('ul'));
+        modal.style.display = 'flex';
+      });
+      // tiny tooltip on hover handled by CSS value
+    });
+
+    // Info modal
+    infoBtn.addEventListener('click',()=>{ modal.style.display='flex'; });
+    closeModal.addEventListener('click',()=>{ modal.style.display='none'; });
+    modal.addEventListener('click',(e)=>{ if(e.target===modal) modal.style.display='none'; });
+    fabInfo.addEventListener('click',()=>{ alert('Tip: Click any bar to read its short description, or use Export to save a PNG of the chart.'); });
+
+    // Read more -> show longer modal
+    moreBtn.addEventListener('click',()=>{
+      document.getElementById('modalTitle').textContent = 'Detailed Story';
+      const modalContent = modal.querySelector('.modal');
+      modalContent.querySelector('p')?.remove();
+      const p = document.createElement('p');
+      p.innerHTML = `Each bar represents a decade's progress in innovation, automation, and industrial expansion — from steam-powered & heavy industries (1950s) to the AI-driven, green-tech forward 2020s. Use this visualization as a hero image on landing pages, or export it for presentations.`;
+      modalContent.insertBefore(p, modalContent.querySelector('ul'));
+      modal.style.display='flex';
+    });
+
+    // Helper: dynamically load a script and return a promise
+    function loadScript(url){
+      return new Promise((resolve,reject)=>{
+        if(document.querySelector(`script[src="${url}"]`)){
+          // script tag already present -> wait for it to be ready
+          const existing = document.querySelector(`script[src="${url}"]`);
+          existing.addEventListener('load', ()=> resolve());
+          existing.addEventListener('error', ()=> reject(new Error('Failed to load script')));
+          return;
+        }
+        const s = document.createElement('script');
+        s.src = url;
+        s.async = true;
+        s.onload = ()=> resolve();
+        s.onerror = ()=> reject(new Error('Failed to load script: '+url));
+        document.head.appendChild(s);
+      });
+    }
+
+    // Preferred CDN URLs (fallback order)
+    const HTML2CANVAS_CDNS = [
+      'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+      'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+      'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js'
+    ];
+
+    // Safe wrapper to ensure html2canvas is available before using it
+    function ensureHtml2Canvas(){
+      if(window.html2canvas) return Promise.resolve();
+      // try each CDN in order until one works
+      return HTML2CANVAS_CDNS.reduce((prev, url)=>{
+        return prev.catch(()=> loadScript(url));
+      }, Promise.reject()).catch(err => {
+        // final catch: try first CDN directly
+        return loadScript(HTML2CANVAS_CDNS[0]);
+      });
+    }
+
+    // Download PNG using html2canvas (with dynamic loader and graceful error handling)
+    downloadBtn.addEventListener('click',()=>{
+      const node = document.querySelector('.card.chart-grid');
+      downloadBtn.disabled = true; downloadBtn.textContent = 'Preparing...';
+
+      ensureHtml2Canvas().then(()=>{
+        if(!window.html2canvas){
+          throw new Error('html2canvas failed to load');
+        }
+        return window.html2canvas(node, {allowTaint:true, scale:2});
+      }).then(canvas=>{
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = 'india-industrial-tech-growth.png';
+        a.click();
+      }).catch(err=>{
+        console.error(err);
+        alert('Export failed: could not load the export library. If you are offline or using a restricted network, try exporting manually (right-click -> Save as) or use the SVG export instead.');
+      }).finally(()=>{
+        downloadBtn.disabled = false; downloadBtn.textContent = '⬇️ Export PNG';
+      });
+    });
+
+    // Download standalone SVG (built from DOM)
+    downloadSVG.addEventListener('click',()=>{
+      const width = 1000; const height = 520;
+      const leftPad = 120; const bottomPad = 80; const barWidth = 80; const gap = 40;
+      const svgParts = [];
+      svgParts.push(`<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}'>`);
+      svgParts.push(`<rect width='100%' height='100%' fill='#e8f2ff'/>`);
+      svgParts.push(`<text x='50' y='40' font-family='sans-serif' font-size='20' fill='#07304a'>Growth of Industrial & Technological Sectors in India (1950–2025)</text>`);
+      bars.forEach((b,i)=>{
+        const v = +b.dataset.value;
+        const x = leftPad + i*(barWidth+gap);
+        const h = (v/100)*300;
+        const y = height - bottomPad - h;
+        const fill = ['#5f8bff','#60a5fa','#8b63ff','#2b6ef6','#72f0ff'][i%5];
+        svgParts.push(`<rect x='${x}' y='${y}' width='${barWidth}' height='${h}' rx='8' fill='${fill}'/>`);
+        svgParts.push(`<text x='${x + barWidth/2}' y='${height - bottomPad + 22}' font-family='sans-serif' font-size='13' text-anchor='middle' fill='#274156'>${b.dataset.title}</text>`);
+        svgParts.push(`<text x='${x + barWidth/2}' y='${y - 8}' font-family='sans-serif' font-size='12' text-anchor='middle' fill='#072231' font-weight='700'>${v}</text>`);
+      });
+      svgParts.push(`</svg>`);
+      const svgStr = svgParts.join('\n');
+      const blob = new Blob([svgStr], {type:'image/svg+xml'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download='india-industrial-tech-growth.svg'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Toggle values visible
+    let valsShown = true;
+    toggleValues.addEventListener('click',()=>{
+      valsShown = !valsShown;
+      bars.forEach(b=>{ b.querySelector('.value').style.display = valsShown ? 'block' : 'none'; });
+    });
+
+    // Auto play once for users arriving (optional) — don't auto-play on mobile to be polite
+    if(window.innerWidth>680){ setTimeout(()=>{ playStory(); }, 600); }
+
+  </script>
+</body>
+</html>
